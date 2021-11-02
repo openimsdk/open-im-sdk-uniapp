@@ -6,6 +6,8 @@ Open im includes instant messaging and real-time audio and video server and clie
 
 > [中文文档](https://doc.rentsoft.cn/)
 
+
+
 ## Getting Started
 
 ### How To Get Resource
@@ -16,19 +18,22 @@ Open im includes instant messaging and real-time audio and video server and clie
   git clone https://github.com/OpenIMSDK/Open-IM-SDK-Uniapp.git
   ```
 
-- get dependencies from npm
 
-  ```bash
-  npm install
-  ```
 
-- change your own AppID from DCloud
+## Integration
 
-  you can regain it in the project root manifest.json
+### Integrate SDK into your project
+
+- You can move folder  `Tuoyun-OpenIMSDK`  into your perject root folder `nativeplugins` 
+- Then you can add native plugin in you perject manifest.json,and choice `OpenIMSDK`
+
+
 
 ## Build and run
 
 - You need to generate a custom debug dock using the compiler's(Hbuilder X) cloud packaging feature, and then choose to run the custom debug dock on your phone.
+
+  
 
 ## Getting Help
 
