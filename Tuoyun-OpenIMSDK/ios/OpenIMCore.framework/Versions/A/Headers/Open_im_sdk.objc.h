@@ -941,6 +941,7 @@
 - (void)getBlackList:(id<Open_im_sdkBase> _Nullable)callback;
 // skipped method UserRelated.GetCh with unsupported parameter or return types
 
+- (void)getConversationRecvMessageOpt:(id<Open_im_sdkBase> _Nullable)callback conversationIDList:(NSString* _Nullable)conversationIDList;
 - (void)getFriendApplicationList:(id<Open_im_sdkBase> _Nullable)callback;
 - (void)getFriendList:(id<Open_im_sdkBase> _Nullable)callback;
 - (void)getFriendsInfo:(id<Open_im_sdkBase> _Nullable)callback uidList:(NSString* _Nullable)uidList;
@@ -991,6 +992,7 @@
 - (NSString* _Nonnull)sendMessageNotOss:(id<Open_im_sdkSendMsgCallBack> _Nullable)callback message:(NSString* _Nullable)message receiver:(NSString* _Nullable)receiver groupID:(NSString* _Nullable)groupID onlineUserOnly:(BOOL)onlineUserOnly;
 - (void)setConversationDraft:(NSString* _Nullable)conversationID draftText:(NSString* _Nullable)draftText callback:(id<Open_im_sdkBase> _Nullable)callback;
 - (void)setConversationListener:(id<Open_im_sdkOnConversationListener> _Nullable)listener;
+- (void)setConversationRecvMessageOpt:(id<Open_im_sdkBase> _Nullable)callback conversationIDList:(NSString* _Nullable)conversationIDList opt:(long)opt;
 - (void)setFriendInfo:(NSString* _Nullable)comment callback:(id<Open_im_sdkBase> _Nullable)callback;
 - (BOOL)setFriendListener:(id<Open_im_sdkOnFriendshipListener> _Nullable)listener;
 - (void)setGroupInfo:(NSString* _Nullable)jsonGroupInfo callback:(id<Open_im_sdkBase> _Nullable)callback;
@@ -1206,9 +1208,15 @@ FOUNDATION_EXPORT const int64_t Open_im_sdkMsgStatusSendSuccess;
  */
 FOUNDATION_EXPORT const int64_t Open_im_sdkMsgStatusSending;
 FOUNDATION_EXPORT const int64_t Open_im_sdkNotRead;
+FOUNDATION_EXPORT const int64_t Open_im_sdkNotReceiveMessage;
 FOUNDATION_EXPORT const int64_t Open_im_sdkPicture;
 FOUNDATION_EXPORT const int64_t Open_im_sdkQuitGroupTip;
 FOUNDATION_EXPORT const int64_t Open_im_sdkQuote;
+/**
+ * MsgReceiveOpt
+ */
+FOUNDATION_EXPORT const int64_t Open_im_sdkReceiveMessage;
+FOUNDATION_EXPORT const int64_t Open_im_sdkReceiveNotNotifyMessage;
 FOUNDATION_EXPORT const int64_t Open_im_sdkRefuseFriendApplicationTip;
 FOUNDATION_EXPORT const int64_t Open_im_sdkRefuseGroupApplicationTip;
 FOUNDATION_EXPORT const int64_t Open_im_sdkRevoke;
@@ -1258,6 +1266,9 @@ FOUNDATION_EXPORT const int64_t Open_im_sdkWSSendMsg;
 FOUNDATION_EXPORT NSString* _Nonnull const Open_im_sdkZoomScale;
 
 @interface Open_im_sdk : NSObject
++ (int32_t) hearbeatInterval;
++ (void) setHearbeatInterval:(int32_t)v;
+
 + (int32_t) sdkLogFlag;
 + (void) setSdkLogFlag:(int32_t)v;
 
@@ -1528,6 +1539,8 @@ FOUNDATION_EXPORT void Open_im_sdkGetBlackList(id<Open_im_sdkBase> _Nullable cal
 
 FOUNDATION_EXPORT NSString* _Nonnull Open_im_sdkGetConversationIDBySessionType(NSString* _Nullable sourceID, long sessionType);
 
+FOUNDATION_EXPORT void Open_im_sdkGetConversationRecvMessageOpt(id<Open_im_sdkBase> _Nullable callback, NSString* _Nullable conversationIDList);
+
 /**
  * Get the current timestamp by Mill
  */
@@ -1666,6 +1679,8 @@ FOUNDATION_EXPORT void Open_im_sdkSetConversationDraft(NSString* _Nullable conve
 
 FOUNDATION_EXPORT void Open_im_sdkSetConversationListener(id<Open_im_sdkOnConversationListener> _Nullable listener);
 
+FOUNDATION_EXPORT void Open_im_sdkSetConversationRecvMessageOpt(id<Open_im_sdkBase> _Nullable callback, NSString* _Nullable conversationIDList, long opt);
+
 FOUNDATION_EXPORT void Open_im_sdkSetFriendInfo(NSString* _Nullable comment, id<Open_im_sdkBase> _Nullable callback);
 
 FOUNDATION_EXPORT BOOL Open_im_sdkSetFriendListener(id<Open_im_sdkOnFriendshipListener> _Nullable listener);
@@ -1673,6 +1688,8 @@ FOUNDATION_EXPORT BOOL Open_im_sdkSetFriendListener(id<Open_im_sdkOnFriendshipLi
 FOUNDATION_EXPORT void Open_im_sdkSetGroupInfo(NSString* _Nullable jsonGroupInfo, id<Open_im_sdkBase> _Nullable callback);
 
 FOUNDATION_EXPORT void Open_im_sdkSetGroupListener(id<Open_im_sdkOnGroupListener> _Nullable callback);
+
+FOUNDATION_EXPORT void Open_im_sdkSetHearbeatInterval(int32_t interval);
 
 /**
  * 1 no print
