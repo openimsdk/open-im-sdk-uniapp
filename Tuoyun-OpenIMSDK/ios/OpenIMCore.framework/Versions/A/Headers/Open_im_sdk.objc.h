@@ -1266,9 +1266,6 @@ FOUNDATION_EXPORT const int64_t Open_im_sdkWSSendMsg;
 FOUNDATION_EXPORT NSString* _Nonnull const Open_im_sdkZoomScale;
 
 @interface Open_im_sdk : NSObject
-+ (int32_t) hearbeatInterval;
-+ (void) setHearbeatInterval:(int32_t)v;
-
 + (int32_t) sdkLogFlag;
 + (void) setSdkLogFlag:(int32_t)v;
 
