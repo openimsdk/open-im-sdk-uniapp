@@ -1,0 +1,1 @@
+> 需要先拉取[OpenIM SDK Core](https://github.com/openimsdk/openim-sdk-core)，并按照文档编译生成Android/iOS所需要的aar/Framework，分别引入andorid插件的libs目录下和ios插件的Framework目录下。

@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk rootProject.ext.androidConfig.compileSdk
+
+
+    defaultConfig {
+        minSdk rootProject.ext.androidConfig.minSdk
+        targetSdk rootProject.ext.androidConfig.targetSdk
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
+    api 'com.google.code.gson:gson:2.9.0'
+
+    compileOnly 'androidx.recyclerview:recyclerview:1.0.0'
+    compileOnly 'androidx.legacy:legacy-support-v4:1.0.0'
+    compileOnly 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'com.alibaba:fastjson:1.1.46.android'
+    implementation 'com.facebook.fresco:fresco:1.13.0'
+}
