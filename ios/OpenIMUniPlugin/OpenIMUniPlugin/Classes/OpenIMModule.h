@@ -1,3 +1,10 @@
+//
+//  OpenIMUniPlugin.h
+//  OpenIMUniPlugin
+//
+//  Created by blooming on 2022/12/13.
+//
+
 #import <Foundation/Foundation.h>
 #import "DCUniModule.h"
 #import "CallbackProxy.h"

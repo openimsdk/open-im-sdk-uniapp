@@ -1,3 +1,10 @@
+//
+//  SendMessageCallbackProxy.m
+//  OpenIMUniPlugin
+//
+//  Created by Snow on 2021/6/24.
+//
+
 #import "SendMessageCallbackProxy.h"
 
 @interface SendMessageCallbackProxy()
