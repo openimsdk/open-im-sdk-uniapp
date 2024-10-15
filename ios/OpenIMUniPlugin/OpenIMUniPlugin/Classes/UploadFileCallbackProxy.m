@@ -1,3 +1,10 @@
+//
+//  UploadFileCallbackProxy.m
+//  OpenIMUniPlugin
+//
+//  Created by OpenIM on 2022/6/14.
+//
+
 #import "UploadFileCallbackProxy.h"
 
 @interface UploadFileCallbackProxy()

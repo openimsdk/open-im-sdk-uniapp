@@ -1,3 +1,10 @@
+//
+//  OpenIMModule.m
+//  OpenIMUniPlugin
+//
+//  Created by Snow on 2021/6/24.
+//
+
 #import "OpenIMModule.h"
 #import "SendMessageCallbackProxy.h"
 #import "UploadFileCallbackProxy.h"
@@ -67,10 +74,15 @@ NSString *eventName = [[funcName stringByReplacingOccurrencesOfString:@":" withS
 UNI_EXPORT_METHOD_SYNC(@selector(initSDK:config:))
 
 - (BOOL)initSDK:(NSString *)opid config:(NSDictionary *)config {
-    NSLog(@"initSDK ---- %@",[config json]);
+    NSLog(@"initSDK ---- %@", [config json]);
     if(self.initFlag) return true;
-    BOOL flag =Open_im_sdkInitSDK(self, opid, [config json]);
-    if (flag){
+
+    NSMutableDictionary *newConfig = [config mutableCopy];
+    [newConfig setObject:@1 forKey:@"platformID"];
+    NSLog(@"newConfig ---- %@", [newConfig json]);
+
+    BOOL flag = Open_im_sdkInitSDK(self, opid, [newConfig json]);
+    if (flag) {
         Open_im_sdkSetUserListener(self);
         Open_im_sdkSetConversationListener(self);
         Open_im_sdkSetAdvancedMsgListener(self);
@@ -138,14 +150,6 @@ UNI_EXPORT_METHOD(@selector(getUsersInfo:userIDList:callback:))
 - (void)getUsersInfo:(NSString *)opid userIDList:(NSArray *)userIDList callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
     Open_im_sdkGetUsersInfo(proxy,opid,[userIDList json]);
-}
-
-UNI_EXPORT_METHOD(@selector(getUsersInfoWithCache:options:callback:))
-
-- (void)getUsersInfoWithCache:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
-    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    NSArray* userIDList = [options valueForKey:@"userIDList"];
-    Open_im_sdkGetUsersInfoWithCache(proxy,opid,[userIDList json],[options valueForKey:@"groupID"]);
 }
 
 UNI_EXPORT_METHOD(@selector(setSelfInfo:userInfo:callback:))
@@ -226,7 +230,10 @@ UNI_EXPORT_METHOD(@selector(setGlobalRecvMessageOpt:opt:callback:))
 
 - (void)setGlobalRecvMessageOpt:(NSString *)opid opt:(long)opt callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetGlobalRecvMessageOpt(proxy,opid,opt);
+    NSDictionary *param = @{
+        @"globalRecvMsgOpt":@(opt),
+    };
+    Open_im_sdkSetSelfInfo(proxy,opid,[param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(hideConversation:conversationID:callback:))
@@ -236,11 +243,25 @@ UNI_EXPORT_METHOD(@selector(hideConversation:conversationID:callback:))
     Open_im_sdkHideConversation(proxy,opid,conversationID);
 }
 
-UNI_EXPORT_METHOD(@selector(getConversationRecvMessageOpt:conversationIDList:callback:))
+//UNI_EXPORT_METHOD(@selector(getConversationRecvMessageOpt:conversationIDList:callback:))
+//
+//- (void)getConversationRecvMessageOpt:(NSString *)opid conversationIDList:(NSArray *)conversationIDList callback:(UniModuleKeepAliveCallback)callback {
+//    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+//    Open_im_sdkGetConversationRecvMessageOpt(proxy, opid, [conversationIDList json]);
+//}
 
-- (void)getConversationRecvMessageOpt:(NSString *)opid conversationIDList:(NSArray *)conversationIDList callback:(UniModuleKeepAliveCallback)callback {
+// UNI_EXPORT_METHOD(@selector(deleteAllConversationFromLocal:callback:))
+
+// - (void)deleteAllConversationFromLocal:(NSString *)opid callback:(UniModuleKeepAliveCallback)callback {
+//     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+//     Open_im_sdkDeleteAllConversationFromLocal(proxy, opid);
+// }
+
+UNI_EXPORT_METHOD(@selector(setConversation:options:callback:))
+
+- (void)setConversation:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkGetConversationRecvMessageOpt(proxy, opid, [conversationIDList json]);
+    Open_im_sdkSetConversation(proxy,opid, [options valueForKey:@"conversationID"],[options json]);
 }
 
 UNI_EXPORT_METHOD(@selector(setConversationDraft:options:callback:))
@@ -254,21 +275,30 @@ UNI_EXPORT_METHOD(@selector(resetConversationGroupAtType:conversationID:callback
 
 - (void)resetConversationGroupAtType:(NSString *)opid conversationID:(NSString *)conversationID callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkResetConversationGroupAtType(proxy,opid,conversationID);
+    NSDictionary *param = @{
+        @"groupAtType":@(0),
+    };
+    Open_im_sdkSetConversation(proxy,opid,conversationID,[param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(pinConversation:options:callback:))
 
 - (void)pinConversation:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkPinConversation(proxy,opid, [options valueForKey:@"conversationID"], [[options valueForKey:@"isPinned"] boolValue]);
+    NSDictionary *param = @{
+        @"isPinned":options[@"isPinned"],
+    };
+    Open_im_sdkSetConversation(proxy,opid, [options valueForKey:@"conversationID"], [param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(setConversationPrivateChat:options:callback:))
 
 - (void)setConversationPrivateChat:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetConversationPrivateChat(proxy,opid, [options valueForKey:@"conversationID"], [[options valueForKey:@"isPrivate"] boolValue] );
+    NSDictionary *param = @{
+        @"isPrivateChat":options[@"isPrivate"],
+    };
+    Open_im_sdkSetConversation(proxy,opid, [options valueForKey:@"conversationID"], [param json]);
 }
 
 
@@ -276,14 +306,20 @@ UNI_EXPORT_METHOD(@selector(setConversationBurnDuration:options:callback:))
 
 - (void)setConversationBurnDuration:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetConversationBurnDuration(proxy,opid,[options valueForKey:@"conversationID"], [[options valueForKey:@"burnDuration"] intValue]);
+    NSDictionary *param = @{
+        @"burnDuration":options[@"burnDuration"],
+    };
+    Open_im_sdkSetConversation(proxy,opid,[options valueForKey:@"conversationID"], [param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(setConversationRecvMessageOpt:options:callback:))
 
 - (void)setConversationRecvMessageOpt:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetConversationRecvMessageOpt(proxy, opid, [options valueForKey:@"conversationID"], [[options valueForKey:@"opt"] longValue]);
+    NSDictionary *param = @{
+        @"recvMsgOpt":options[@"opt"],
+    };
+    Open_im_sdkSetConversation(proxy, opid, [options valueForKey:@"conversationID"], [param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(getTotalUnreadMsgCount:callback:))
@@ -522,6 +558,20 @@ UNI_EXPORT_METHOD(@selector(typingStatusUpdate:options:callback:))
     Open_im_sdkTypingStatusUpdate(proxy,opid,[options valueForKey:@"recvID"], [options valueForKey:@"msgTip"]);
 }
 
+UNI_EXPORT_METHOD(@selector(changeInputStates:options:callback:))
+
+- (void)changeInputStates:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+    Open_im_sdkChangeInputStates(proxy,opid,[options valueForKey:@"conversationID"], [[options valueForKey:@"focus"] boolValue]);
+}
+
+UNI_EXPORT_METHOD(@selector(getInputStates:options:callback:))
+
+- (void)getInputStates:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+    Open_im_sdkGetInputStates(proxy,opid,[options valueForKey:@"conversationID"], [options valueForKey:@"userID"]);
+}
+
 UNI_EXPORT_METHOD(@selector(markConversationMessageAsRead:conversationID:callback:))
 
 - (void)markConversationMessageAsRead:(NSString *)opid conversationID:(NSString *)conversationID  callback:(UniModuleKeepAliveCallback)callback {
@@ -618,25 +668,26 @@ UNI_EXPORT_METHOD(@selector(setMessageLocalEx:options:callback:))
 
 // MARK: - Friend
 
-UNI_EXPORT_METHOD(@selector(getSpecifiedFriendsInfo:userIDList:callback:))
+UNI_EXPORT_METHOD(@selector(getSpecifiedFriendsInfo:options:callback:))
 
-- (void)getSpecifiedFriendsInfo:(NSString *)opid userIDList:(NSArray *)userIDList callback:(UniModuleKeepAliveCallback)callback {
+- (void)getSpecifiedFriendsInfo:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    NSArray *userIDList = [options valueForKey:@"userIDList"];
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkGetSpecifiedFriendsInfo(proxy, opid,[userIDList json]);
+    Open_im_sdkGetSpecifiedFriendsInfo(proxy, opid,[userIDList json],[[options valueForKey:@"filterBlack"] boolValue]);
 }
 
-UNI_EXPORT_METHOD(@selector(getFriendList:callback:))
+UNI_EXPORT_METHOD(@selector(getFriendList:filterBlack:callback:))
 
-- (void)getFriendList:(NSString *)opid callback:(UniModuleKeepAliveCallback)callback  {
+- (void)getFriendList:(NSString *)opid filterBlack:(BOOL)filterBlack callback:(UniModuleKeepAliveCallback)callback  {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkGetFriendList(proxy,opid);
+    Open_im_sdkGetFriendList(proxy,opid,filterBlack);
 }
 
 UNI_EXPORT_METHOD(@selector(getFriendListPage:options:callback:))
 
 - (void)getFriendListPage:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback  {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkGetFriendListPage(proxy,opid,[[options valueForKey:@"offset"] intValue],[[options valueForKey:@"count"] intValue]);
+    Open_im_sdkGetFriendListPage(proxy,opid,[[options valueForKey:@"offset"] intValue],[[options valueForKey:@"count"] intValue],[[options valueForKey:@"filterBlack"] boolValue]);
 }
 
 UNI_EXPORT_METHOD(@selector(searchFriends:options:callback:))
@@ -661,11 +712,23 @@ UNI_EXPORT_METHOD(@selector(addFriend:userIDReqMsg:callback:))
     Open_im_sdkAddFriend(proxy,opid, [userIDReqMsg json]);
 }
 
-UNI_EXPORT_METHOD(@selector(setFriendRemark:userIDRemark:callback:))
+UNI_EXPORT_METHOD(@selector(updateFriends:options:callback:))
 
-- (void)setFriendRemark:(NSString *)opid userIDRemark:(NSDictionary *)userIDRemark callback:(UniModuleKeepAliveCallback)callback {
+- (void)updateFriends:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetFriendRemark(proxy, opid,[userIDRemark json]);
+    Open_im_sdkUpdateFriends(proxy, opid, [options json]);
+}
+
+UNI_EXPORT_METHOD(@selector(setFriendRemark:options:callback:))
+
+- (void)setFriendRemark:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+    NSArray *friendUserIDs = @[options[@"toUserID"]];
+    NSDictionary *param = @{
+        @"friendUserIDs":friendUserIDs,
+        @"remark":options[@"remark"],
+    };
+    Open_im_sdkUpdateFriends(proxy, opid,[param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(deleteFriend:friendUserID:callback:))
@@ -729,6 +792,7 @@ UNI_EXPORT_METHOD(@selector(removeBlack:removeUserID:callback:))
     Open_im_sdkRemoveBlack(proxy, opid, removeUserID );
 }
 
+
 // MARK: - Group
 
 UNI_EXPORT_METHOD(@selector(createGroup:groupBaseInfo:callback:))
@@ -781,7 +845,7 @@ UNI_EXPORT_METHOD(@selector(setGroupMemberRoleLevel:options:callback:))
 
 - (void)setGroupMemberRoleLevel:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetGroupMemberRoleLevel(proxy,opid, [options valueForKey:@"groupID"],[options valueForKey:@"userID"],[[options valueForKey:@"roleLevel"] longValue]);
+    Open_im_sdkSetGroupMemberInfo(proxy,opid, [options json]);
 }
 
 UNI_EXPORT_METHOD(@selector(setGroupMemberInfo:memeberInfo:callback:))
@@ -796,6 +860,13 @@ UNI_EXPORT_METHOD(@selector(getJoinedGroupList:callback:))
 - (void)getJoinedGroupList:(NSString *)opid callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
     Open_im_sdkGetJoinedGroupList(proxy,opid);
+}
+
+UNI_EXPORT_METHOD(@selector(getJoinedGroupListPage:options:callback:))
+
+- (void)getJoinedGroupListPage:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+    Open_im_sdkGetJoinedGroupListPage(proxy,opid,[[options valueForKey:@"offset"] intValue],[[options valueForKey:@"count"] intValue]);
 }
 
 UNI_EXPORT_METHOD(@selector(getSpecifiedGroupsInfo:groupIDList:callback:))
@@ -823,21 +894,33 @@ UNI_EXPORT_METHOD(@selector(setGroupVerification:options:callback:))
 
 - (void)setGroupVerification:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetGroupVerification(proxy,opid, [options valueForKey:@"groupID"],[[options valueForKey:@"verification"] intValue]);
+    NSDictionary *param = @{
+        @"groupID":options[@"groupID"],
+        @"needVerification":options[@"verification"],
+    };
+    Open_im_sdkSetGroupInfo(proxy,opid, [param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(setGroupLookMemberInfo:options:callback:))
 
 - (void)setGroupLookMemberInfo:(NSString *)opid options:(NSDictionary *)options  callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetGroupLookMemberInfo(proxy,opid,[options valueForKey:@"groupID"],[[options valueForKey:@"rule"] intValue]);
+    NSDictionary *param = @{
+        @"groupID":options[@"groupID"],
+        @"lookMemberInfo":options[@"rule"],
+    };
+    Open_im_sdkSetGroupInfo(proxy,opid,[param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(setGroupApplyMemberFriend:options:callback:))
 
 - (void)setGroupApplyMemberFriend:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetGroupApplyMemberFriend(proxy,opid,[options valueForKey:@"groupID"],[[options valueForKey:@"rule"] intValue]);
+    NSDictionary *param = @{
+        @"groupID":options[@"groupID"],
+        @"applyMemberFriend":options[@"rule"],
+    };
+    Open_im_sdkSetGroupInfo(proxy,opid,[param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(getGroupMemberList:options:callback:))
@@ -868,6 +951,14 @@ UNI_EXPORT_METHOD(@selector(getSpecifiedGroupMembersInfo:options:callback:))
     NSArray *userIDList = [options valueForKey:@"userIDList"];
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
     Open_im_sdkGetSpecifiedGroupMembersInfo(proxy,opid, [options valueForKey:@"groupID"],[userIDList json]);
+}
+
+UNI_EXPORT_METHOD(@selector(getUsersInGroup:options:callback:))
+
+- (void)getUsersInGroup:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    NSArray *userIDList = [options valueForKey:@"userIDList"];
+    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+    Open_im_sdkGetUsersInGroup(proxy,opid, [options valueForKey:@"groupID"],[userIDList json]);
 }
 
 UNI_EXPORT_METHOD(@selector(kickGroupMember:options:callback:))
@@ -925,7 +1016,12 @@ UNI_EXPORT_METHOD(@selector(setGroupMemberNickname:options:callback:))
 
 - (void)setGroupMemberNickname:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
-    Open_im_sdkSetGroupMemberNickname(proxy,opid,[options valueForKey:@"groupID"], [options valueForKey:@"userID"],[options valueForKey:@"groupMemberNickname"]);
+    NSDictionary *param = @{
+        @"groupID":options[@"groupID"],
+        @"userID":options[@"userID"],
+        @"nickname":options[@"groupMemberNickname"],
+    };
+    Open_im_sdkSetGroupMemberInfo(proxy,opid,[param json]);
 }
 
 UNI_EXPORT_METHOD(@selector(searchGroupMembers:searchOptions:callback:))
@@ -944,7 +1040,6 @@ UNI_EXPORT_METHOD(@selector(isJoinGroup:groupID:callback:))
 
 
 // MARK: - Third
-
 UNI_EXPORT_METHOD(@selector(setAppBadge:appUnreadCount:callback:))
 
 - (void)setAppBadge:(NSString *)opid appUnreadCount:(int32_t)appUnreadCount callback:(UniModuleKeepAliveCallback)callback {
@@ -952,12 +1047,19 @@ UNI_EXPORT_METHOD(@selector(setAppBadge:appUnreadCount:callback:))
     Open_im_sdkSetAppBadge(proxy,opid,appUnreadCount);
 }
 
-UNI_EXPORT_METHOD(@selector(uploadLogs:data:callback:))
+UNI_EXPORT_METHOD(@selector(uploadLogs:options:callback:))
 
-- (void)uploadLogs:(NSString *)opid data:(NSArray *)data callback:(UniModuleKeepAliveCallback)callback {
+- (void)uploadLogs:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
     CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
     UploadLogsCallbackProxy *uploadProxy = [[UploadLogsCallbackProxy alloc] initWithOpid:opid module:self];
-    Open_im_sdkUploadLogs(proxy,opid,[data json],uploadProxy);
+    Open_im_sdkUploadLogs(proxy,opid,[options valueForKey:@"line"],[options valueForKey:@"ex"],uploadProxy);
+}
+
+UNI_EXPORT_METHOD(@selector(logs:options:callback:))
+
+- (void)logs:(NSString *)opid options:(NSDictionary *)options callback:(UniModuleKeepAliveCallback)callback {
+    CallbackProxy *proxy = [[CallbackProxy alloc] initWithCallback:callback];
+    Open_im_sdkLogs(proxy,opid,[[options valueForKey:@"logLevel"] longValue],[options valueForKey:@"file"],[[options valueForKey:@"line"] longValue],[options valueForKey:@"msgs"],[options valueForKey:@"err"],[options valueForKey:@"keyAndValue"]);
 }
 
 UNI_EXPORT_METHOD(@selector(getSdkVersion))
@@ -1039,6 +1141,14 @@ UNI_EXPORT_METHOD(@selector(uploadFile:reqData:callback:))
         @"errCode": @(0)
     };
     [self.uniInstance fireGlobalEvent:@"onUserTokenExpired" params:param];
+}
+
+- (void)onUserTokenInvalid {
+    NSDictionary *param = @{
+        @"err":@"",
+        @"errCode": @(0)
+    };
+    [self.uniInstance fireGlobalEvent:@"onUserTokenInvalid" params:param];
 }
 
 
@@ -1162,7 +1272,13 @@ UNI_EXPORT_METHOD(@selector(uploadFile:reqData:callback:))
 }
 
 - (void)onConversationUserInputStatusChanged:(NSString* _Nullable)change {
-    
+    NSDictionary *data = [self parseJsonStr2Dict:change];
+    NSDictionary *param = @{
+        @"errMsg":@"",
+        @"errCode": @(0),
+        @"data":data,
+    };
+    [self.uniInstance fireGlobalEvent:@"onInputStatusChanged" params:param];
 }
 
 - (void)onNewConversation:(NSString* _Nullable)conversationList {
@@ -1173,28 +1289,40 @@ UNI_EXPORT_METHOD(@selector(uploadFile:reqData:callback:))
     PUSH_EVENT(param)
 }
 
-- (void)onSyncServerFailed {
+- (void)onSyncServerFailed:(BOOL)reinstalled {
     NSDictionary *param = @{
         @"errMsg":@"",
-        @"errCode": @(0)
+        @"errCode": @(0),
+        @"reinstall": @(reinstalled)
     };
     [self.uniInstance fireGlobalEvent:@"onSyncServerFailed" params:param];
 }
 
-- (void)onSyncServerFinish {
+- (void)onSyncServerFinish:(BOOL)reinstalled {
     NSDictionary *param = @{
         @"errMsg":@"",
-        @"errCode": @(0)
+        @"errCode": @(0),
+        @"reinstall": @(reinstalled)
     };
     [self.uniInstance fireGlobalEvent:@"onSyncServerFinish" params:param];
 }
 
-- (void)onSyncServerStart {
+- (void)onSyncServerStart:(BOOL)reinstalled {
     NSDictionary *param = @{
         @"errMsg":@"",
-        @"errCode": @(0)
+        @"errCode": @(0),
+        @"reinstall": @(reinstalled)
     };
     [self.uniInstance fireGlobalEvent:@"onSyncServerStart" params:param];
+}
+
+- (void)onSyncServerProgress:(long)progress {
+    NSDictionary *param = @{
+        @"errMsg":@"",
+        @"errCode": @(0),
+        @"progress": @(progress)
+    };
+    [self.uniInstance fireGlobalEvent:@"onSyncServerProgress" params:param];
 }
 
 - (void)onTotalUnreadMessageCountChanged:(int32_t)totalUnreadCount {
