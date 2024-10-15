@@ -1,3 +1,10 @@
+//
+//  SendMessageCallbackProxy.h
+//  OpenIMUniPlugin
+//
+//  Created by Snow on 2021/6/24.
+//
+
 #import <Foundation/Foundation.h>
 #import "DCUniModule.h"
 #import "OpenIMModule.h"

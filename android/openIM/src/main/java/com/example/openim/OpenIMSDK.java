@@ -36,6 +36,9 @@ public class OpenIMSDK extends UniModule {
     )
     public Boolean initSDK(String operationID, JSONObject options) {
         if(this.initFlag) return true;
+
+        options.put("platformID", 2);
+
         OnConnListener connListener = new OnConnListener() {
             public void onConnectFailed(int i, String s) {
                 Map<String, Object> params = new HashMap();
@@ -70,6 +73,14 @@ public class OpenIMSDK extends UniModule {
                 params.put("errCode", 0);
                 params.put("errMsg", "");
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onUserTokenExpired", params);
+            }
+
+            @Override
+            public void onUserTokenInvalid(String s) {
+                Map<String, Object> params = new HashMap();
+                params.put("errCode", 0);
+                params.put("errMsg", "");
+                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onUserTokenInvalid", params);
             }
         };
         Boolean flag = Open_im_sdk.initSDK(connListener, operationID, options.toJSONString());
@@ -151,6 +162,21 @@ public class OpenIMSDK extends UniModule {
             }
 
             @Override
+            public void onUserCommandAdd(String s) {
+
+            }
+
+            @Override
+            public void onUserCommandDelete(String s) {
+
+            }
+
+            @Override
+            public void onUserCommandUpdate(String s) {
+
+            }
+
+            @Override
             public void onUserStatusChanged(String s) {
                 Map<String, Object> params = new HashMap();
                 params.put("data", JSONObject.parseObject(s));
@@ -165,13 +191,6 @@ public class OpenIMSDK extends UniModule {
     )
     public void getUsersInfo(String operationID, JSONArray userIDList, UniJSCallback callback) {
         Open_im_sdk.getUsersInfo(new BaseImpl(callback), operationID, userIDList.toJSONString());
-    }
-
-    @UniJSMethod(
-            uiThread = false
-    )
-    public void getUsersInfoWithCache(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.getUsersInfoWithCache(new BaseImpl(callback), operationID, options.getJSONArray("userIDList").toJSONString(), options.getString("groupID"));
     }
 
     @UniJSMethod(
@@ -242,27 +261,6 @@ public class OpenIMSDK extends UniModule {
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onRecvC2CReadReceipt", params);
             }
 
-            public void onRecvGroupReadReceipt(String s) {
-                Map<String, Object> params = new HashMap();
-                params.put("data", JSONArray.parseObject(s));
-                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onRecvGroupReadReceipt", params);
-            }
-
-            @Override
-            public void onRecvMessageExtensionsAdded(String s, String s1) {
-
-            }
-
-            @Override
-            public void onRecvMessageExtensionsChanged(String s, String s1) {
-
-            }
-
-            @Override
-            public void onRecvMessageExtensionsDeleted(String s, String s1) {
-
-            }
-
             public void onRecvNewMessage(String s) {
                 Map<String, Object> params = new HashMap();
                 params.put("data", JSONObject.parseObject(s));
@@ -320,7 +318,9 @@ public class OpenIMSDK extends UniModule {
 
             @Override
             public void onConversationUserInputStatusChanged(String s) {
-
+                Map<String, Object> params = new HashMap();
+                params.put("data", JSONObject.parseObject(s));
+                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onInputStatusChanged", params);
             }
 
             public void onNewConversation(String s) {
@@ -329,24 +329,39 @@ public class OpenIMSDK extends UniModule {
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onNewConversation", params);
             }
 
-            public void onSyncServerFailed() {
+            @Override
+            public void onSyncServerFailed(boolean reinstall) {
                 Map<String, Object> params = new HashMap();
                 params.put("errCode", 0);
                 params.put("errMsg", "");
+                params.put("data", reinstall);
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onSyncServerFailed", params);
             }
 
-            public void onSyncServerFinish() {
+            @Override
+            public void onSyncServerFinish(boolean reinstall) {
                 Map<String, Object> params = new HashMap();
                 params.put("errCode", 0);
                 params.put("errMsg", "");
+                params.put("data", reinstall);
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onSyncServerFinish", params);
             }
 
-            public void onSyncServerStart() {
+            @Override
+            public void onSyncServerProgress(long progress) {
                 Map<String, Object> params = new HashMap();
                 params.put("errCode", 0);
                 params.put("errMsg", "");
+                params.put("data", progress);
+                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onSyncServerProgress", params);
+            }
+
+            @Override
+            public void onSyncServerStart(boolean reinstall) {
+                Map<String, Object> params = new HashMap();
+                params.put("errCode", 0);
+                params.put("errMsg", "");
+                params.put("data", reinstall);
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("onSyncServerStart", params);
             }
 
@@ -358,6 +373,7 @@ public class OpenIMSDK extends UniModule {
         };
         Open_im_sdk.setConversationListener(conversationListener);
     }
+
 
     @UniJSMethod(
             uiThread = false
@@ -391,7 +407,9 @@ public class OpenIMSDK extends UniModule {
             uiThread = false
     )
     public void setGlobalRecvMessageOpt(String operationID, Integer opt, UniJSCallback callback) {
-        Open_im_sdk.setGlobalRecvMessageOpt(new BaseImpl(callback), operationID, opt );
+        JSONObject params = new JSONObject();
+        params.put("globalRecvMsgOpt", opt);
+        Open_im_sdk.setGroupInfo(new BaseImpl(callback), operationID, params.toJSONString());
     }
 
     @UniJSMethod(
@@ -404,8 +422,8 @@ public class OpenIMSDK extends UniModule {
     @UniJSMethod(
             uiThread = false
     )
-    public void getConversationRecvMessageOpt(String operationID, JSONArray conversationIDList, UniJSCallback callback) {
-        Open_im_sdk.getConversationRecvMessageOpt(new BaseImpl(callback), operationID, conversationIDList.toJSONString());
+    public void setConversation(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.setConversation(new BaseImpl(callback), operationID, options.getString("conversationID"), options.toJSONString());
     }
 
     @UniJSMethod(
@@ -419,35 +437,45 @@ public class OpenIMSDK extends UniModule {
             uiThread = false
     )
     public void resetConversationGroupAtType(String operationID, String conversationID, UniJSCallback callback) {
-        Open_im_sdk.resetConversationGroupAtType(new BaseImpl(callback), operationID, conversationID );
+        JSONObject params = new JSONObject();
+        params.put("groupAtType", 0);
+        Open_im_sdk.setConversation(new BaseImpl(callback), operationID, conversationID, params.toJSONString());
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void pinConversation(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.pinConversation(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getBoolean("isPinned"));
+        JSONObject params = new JSONObject();
+        params.put("isPinned", options.getBoolean("isPinned"));
+        Open_im_sdk.setConversation(new BaseImpl(callback), operationID, options.getString("conversationID"), params.toJSONString());
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void setConversationPrivateChat(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setConversationPrivateChat(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getBoolean("isPrivate"));
+        JSONObject params = new JSONObject();
+        params.put("isPrivateChat", options.getBoolean("isPrivate"));
+        Open_im_sdk.setConversation(new BaseImpl(callback), operationID, options.getString("conversationID"), params.toJSONString());
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void setConversationBurnDuration(String operationID, JSONObject options, UniJSCallback callback){
-        Open_im_sdk.setConversationBurnDuration(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getInteger("burnDuration"));
+        JSONObject params = new JSONObject();
+        params.put("burnDuration", options.getInteger("burnDuration"));
+        Open_im_sdk.setConversation(new BaseImpl(callback), operationID, options.getString("conversationID"), params.toJSONString());
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void setConversationRecvMessageOpt(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setConversationRecvMessageOpt(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getInteger("opt"));
+        JSONObject params = new JSONObject();
+        params.put("recvMsgOpt", options.getInteger("opt"));
+        Open_im_sdk.setConversation(new BaseImpl(callback), operationID, options.getString("conversationID"), params.toJSONString());
     }
 
     @UniJSMethod(
@@ -654,6 +682,7 @@ public class OpenIMSDK extends UniModule {
                 params.put("errCode", i);
                 params.put("errMsg", s);
                 params.put("data", options.getJSONObject("message"));
+//                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("sendMessageFailed", params);
                 callback.invoke(params);
             }
 
@@ -672,6 +701,7 @@ public class OpenIMSDK extends UniModule {
                 params.put("errMsg", "");
                 params.put("data", JSONObject.parseObject(s));
                 callback.invoke(params);
+//                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("sendMessageSuccess", params);
             }
         };
         Open_im_sdk.sendMessage(sendMsgCallBack, operationID,messageStr, options.getString("recvID"), options.getString("groupID"), offlinePushInfoStr,isOnlineOnly);
@@ -691,6 +721,7 @@ public class OpenIMSDK extends UniModule {
                 params.put("errMsg", s);
                 params.put("data", options.getJSONObject("message"));
                 callback.invoke(params);
+//                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("sendMessageFailed", params);
             }
 
             public void onProgress(long l) {
@@ -708,6 +739,7 @@ public class OpenIMSDK extends UniModule {
                 params.put("errMsg", "");
                 params.put("data", JSONObject.parseObject(s));
                 callback.invoke(params);
+//                OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("sendMessageSuccess", params);
             }
         };
         Open_im_sdk.sendMessageNotOss(sendMsgNotOssCallBack, operationID, messageStr, options.getString("recvID"), options.getString("groupID"), offlinePushInfoStr, isOnlineOnly);
@@ -752,6 +784,20 @@ public class OpenIMSDK extends UniModule {
     @UniJSMethod(
             uiThread = false
     )
+    public void changeInputStates(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.changeInputStates(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getBoolean("focus"));
+    }
+
+    @UniJSMethod(
+            uiThread = false
+    )
+    public void getInputStates(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.getInputStates(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getString("userID"));
+    }
+
+    @UniJSMethod(
+            uiThread = false
+    )
     public void markConversationMessageAsRead(String operationID, String conversationID, UniJSCallback callback) {
         Open_im_sdk.markConversationMessageAsRead(new BaseImpl(callback), operationID, conversationID);
     }
@@ -776,13 +822,6 @@ public class OpenIMSDK extends UniModule {
     public void deleteMessage(String operationID, JSONObject options, UniJSCallback callback) {
         Open_im_sdk.deleteMessage(new BaseImpl(callback), operationID, options.getString("conversationID"), options.getString("clientMsgID"));
     }
-
-    // @UniJSMethod(
-    //         uiThread = false
-    // )
-    // public void deleteConversationFromLocal(String operationID, String conversationID, UniJSCallback callback) {
-    //     Open_im_sdk.deleteConversationFromLocal(new BaseImpl(callback), operationID, conversationID);
-    // }
 
     @UniJSMethod(
             uiThread = false
@@ -906,22 +945,22 @@ public class OpenIMSDK extends UniModule {
     @UniJSMethod(
             uiThread = false
     )
-    public void getSpecifiedFriendsInfo(String operationID, JSONArray userIDList, UniJSCallback callback) {
-        Open_im_sdk.getSpecifiedFriendsInfo(new BaseImpl(callback), operationID, userIDList.toJSONString());
+    public void getSpecifiedFriendsInfo(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.getSpecifiedFriendsInfo(new BaseImpl(callback), operationID, options.getJSONArray("userIDList").toJSONString(), options.getBooleanValue("filterBlack"));
     }
 
     @UniJSMethod(
             uiThread = false
     )
-    public void getFriendList(String operationID, UniJSCallback callback) {
-        Open_im_sdk.getFriendList(new BaseImpl(callback), operationID);
+    public void getFriendList(String operationID, boolean filterBlack, UniJSCallback callback) {
+        Open_im_sdk.getFriendList(new BaseImpl(callback), operationID, filterBlack);
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void getFriendListPage(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.getFriendListPage(new BaseImpl(callback), operationID, options.getInteger("offset"), options.getInteger("count"));
+        Open_im_sdk.getFriendListPage(new BaseImpl(callback), operationID, options.getInteger("offset"), options.getInteger("count"), options.getBooleanValue("filterBlack"));
     }
 
     @UniJSMethod(
@@ -948,8 +987,22 @@ public class OpenIMSDK extends UniModule {
     @UniJSMethod(
             uiThread = false
     )
-    public void setFriendRemark(String operationID, JSONObject info, UniJSCallback callback) {
-        Open_im_sdk.setFriendRemark(new BaseImpl(callback), operationID, info.toJSONString());
+    public void updateFriends(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.updateFriends(new BaseImpl(callback), operationID, options.toJSONString());
+    }
+
+    @UniJSMethod(
+            uiThread = false
+    )
+    public void setFriendRemark(String operationID, JSONObject options, UniJSCallback callback) {
+        JSONArray toUserIDList = new JSONArray();
+        toUserIDList.add(options.getString("toUserID"));
+
+        JSONObject params = new JSONObject();
+        params.put("friendUserIDs", toUserIDList);
+        params.put("remark", options.getString("remark"));
+
+        Open_im_sdk.updateFriends(new BaseImpl(callback), operationID, params.toJSONString());
     }
 
     @UniJSMethod(
@@ -1130,7 +1183,11 @@ public class OpenIMSDK extends UniModule {
             uiThread = false
     )
     public void setGroupMemberRoleLevel(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setGroupMemberRoleLevel(new BaseImpl(callback), operationID, options.getString("groupID"), options.getString("userID"), options.getInteger("roleLevel"));
+        JSONObject params = new JSONObject();
+        params.put("groupID", options.getString("groupID"));
+        params.put("userID", options.getString("userID"));
+        params.put("roleLevel", options.getInteger("roleLevel"));
+        Open_im_sdk.setGroupMemberInfo(new BaseImpl(callback), operationID, params.toJSONString());
     }
 
     @UniJSMethod(
@@ -1145,6 +1202,13 @@ public class OpenIMSDK extends UniModule {
     )
     public void getJoinedGroupList(String operationID, UniJSCallback callback) {
         Open_im_sdk.getJoinedGroupList(new BaseImpl(callback), operationID);
+    }
+
+    @UniJSMethod(
+            uiThread = false
+    )
+    public void getJoinedGroupListPage(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.getJoinedGroupListPage(new BaseImpl(callback), operationID, options.getInteger("offset"), options.getInteger("count"));
     }
 
     @UniJSMethod(
@@ -1172,21 +1236,30 @@ public class OpenIMSDK extends UniModule {
             uiThread = false
     )
     public void setGroupVerification(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setGroupVerification(new BaseImpl(callback), operationID, options.getString("groupID"), options.getInteger("verification"));
+        JSONObject params = new JSONObject();
+        params.put("groupID", options.getString("groupID"));
+        params.put("needVerification", options.getInteger("verification"));
+        Open_im_sdk.setGroupInfo(new BaseImpl(callback), operationID, params.toJSONString());
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void setGroupLookMemberInfo(String operationID,JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setGroupLookMemberInfo(new BaseImpl(callback),  operationID, options.getString("groupID"), options.getInteger("rule"));
+        JSONObject params = new JSONObject();
+        params.put("groupID", options.getString("groupID"));
+        params.put("lookMemberInfo", options.getInteger("rule"));
+        Open_im_sdk.setGroupInfo(new BaseImpl(callback),  operationID, params.toJSONString());
     }
 
     @UniJSMethod(
             uiThread = false
     )
     public void setGroupApplyMemberFriend(String operationID,JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setGroupApplyMemberFriend(new BaseImpl(callback), operationID,options.getString("groupID"), options.getInteger("rule"));
+        JSONObject params = new JSONObject();
+        params.put("groupID", options.getString("groupID"));
+        params.put("applyMemberFriend", options.getInteger("rule"));
+        Open_im_sdk.setGroupInfo(new BaseImpl(callback), operationID, params.toJSONString());
     }
 
     @UniJSMethod(
@@ -1215,6 +1288,13 @@ public class OpenIMSDK extends UniModule {
     )
     public void getSpecifiedGroupMembersInfo(String operationID, JSONObject options, UniJSCallback callback) {
         Open_im_sdk.getSpecifiedGroupMembersInfo(new BaseImpl(callback), operationID, options.getString("groupID"), options.getJSONArray("userIDList").toJSONString());
+    }
+
+    @UniJSMethod(
+            uiThread = false
+    )
+    public void getUsersInGroup(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.getUsersInGroup(new BaseImpl(callback), operationID, options.getString("groupID"), options.getJSONArray("userIDList").toJSONString());
     }
 
     @UniJSMethod(
@@ -1270,7 +1350,11 @@ public class OpenIMSDK extends UniModule {
             uiThread = false
     )
     public void setGroupMemberNickname(String operationID, JSONObject options, UniJSCallback callback) {
-        Open_im_sdk.setGroupMemberNickname(new BaseImpl(callback), operationID, options.getString("groupID"), options.getString("userID"), options.getString("groupMemberNickname"));
+        JSONObject params = new JSONObject();
+        params.put("groupID", options.getString("groupID"));
+        params.put("userID", options.getString("userID"));
+        params.put("nickname", options.getString("groupMemberNickname"));
+        Open_im_sdk.setGroupMemberInfo(new BaseImpl(callback), operationID, params.toJSONString());
     }
 
     @UniJSMethod(
@@ -1297,7 +1381,7 @@ public class OpenIMSDK extends UniModule {
     @UniJSMethod(
             uiThread = false
     )
-    public void uploadLogs(String operationID, String ex, UniJSCallback callback) {
+    public void uploadLogs(String operationID, JSONObject options, UniJSCallback callback) {
         UploadLogProgress uploadLogProgress = new UploadLogProgress() {
             @Override
             public void onProgress(long current, long size) {
@@ -1309,7 +1393,14 @@ public class OpenIMSDK extends UniModule {
                 OpenIMSDK.this.mUniSDKInstance.fireGlobalEventCallback("uploadLogsProgress", params);
             }
         };
-        Open_im_sdk.uploadLogs(new BaseImpl(callback), operationID,ex,uploadLogProgress);
+        Open_im_sdk.uploadLogs(new BaseImpl(callback), operationID, options.getInteger("line"), options.getString("ex"), uploadLogProgress);
+    }
+
+    @UniJSMethod(
+            uiThread = false
+    )
+    public void logs(String operationID, JSONObject options, UniJSCallback callback) {
+        Open_im_sdk.logs(new BaseImpl(callback), operationID, options.getLong("logLevel"), options.getString("file"), options.getInteger("line"), options.getString("msgs"), options.getString("err"), options.getString("keyAndValue"));
     }
 
     @UniJSMethod(
