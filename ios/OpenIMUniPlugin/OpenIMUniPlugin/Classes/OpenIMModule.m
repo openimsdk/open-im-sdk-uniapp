@@ -1143,9 +1143,9 @@ UNI_EXPORT_METHOD(@selector(uploadFile:reqData:callback:))
     [self.uniInstance fireGlobalEvent:@"onUserTokenExpired" params:param];
 }
 
-- (void)onUserTokenInvalid {
+- (void)onUserTokenInvalid:(NSString* _Nullable)errMsg  {
     NSDictionary *param = @{
-        @"err":@"",
+        @"err":errMsg,
         @"errCode": @(0)
     };
     [self.uniInstance fireGlobalEvent:@"onUserTokenInvalid" params:param];
