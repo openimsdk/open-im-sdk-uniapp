@@ -44,4 +44,14 @@ SDK参考请访问 [https://docs.openim.io/sdks/quickstart/browser](https://docs
 
 ## 授权许可 :page_facing_up:
 
-OpenIM 是在 Apache 2.0 许可下授权的. 查看 [LICENSE](https://github.com/openimsdk/open-im-server/tree/main/LICENSE) 获取完整的许可文本。
+This software is licensed under a dual-license model:
+
+- The GNU Affero General Public License (AGPL), Version 3 or later; **OR**
+- Commercial license terms from OpenIMSDK.
+
+If you wish to use this software under commercial terms, please contact us at: contact@openim.io
+
+For more information, see: https://www.openim.io/en/licensing
+
+
+
